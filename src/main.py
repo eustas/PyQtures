@@ -10,6 +10,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 from ImageLoader import ImageLoader
+from PicViewer import PicViewer
 
 class MainWindow(QtGui.QWidget):
 

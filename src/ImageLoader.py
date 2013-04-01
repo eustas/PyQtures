@@ -21,5 +21,8 @@ class ImageLoader(object):
 
   def getScaledImage(self, path, maxWidth, maxHeight):
     raw = self.getImage(path)
+    raw_size = raw.size()
+    if (raw_size.width() <= maxWidth) and (raw_size.height() <= maxHeight):
+        return raw
     #TODO: Cache
     return raw.scaled(maxWidth, maxHeight, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)

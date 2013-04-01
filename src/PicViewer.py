@@ -27,15 +27,17 @@ class PicViewer(QtGui.QWidget):
       originalSize = self.originalImage.size()
       x = self.eyeX - size.width() / 2
       if x + size.width() > originalSize.width():
-        x = originalSize.width - size.width()
+        x = originalSize.width() - size.width()
       if x < 0:
         x = 0
       y = self.eyeY - size.height() / 2
       if y + size.height() > originalSize.height():
-        y = originalSize.height - size.height()
+        y = originalSize.height() - size.height()
       if y < 0:
         y = 0
-      qp.drawPixmap(0, 0, self.originalImage, x, y, size.width(), size.height())
+      x0 = 0 if originalSize.width() > size.width() else (size.width() - originalSize.width()) / 2
+      y0 = 0 if originalSize.height() > size.height() else (size.height() - originalSize.height()) / 2
+      qp.drawPixmap(x0, y0, self.originalImage, x, y, size.width(), size.height())
     else:
       imgSize = self.image.size()
       x = (size.width() - imgSize.width()) / 2
@@ -46,7 +48,7 @@ class PicViewer(QtGui.QWidget):
     size = self.size()
     w = size.width()
     h = size.height()
-    path = 'dsc00037.jpg'
+    path = 'test.jpg'
     self.originalImage = QtGui.QApplication.instance().imageLoader.getImage(path)
     self.image = QtGui.QApplication.instance().imageLoader.getScaledImage(path, w, h)
 
@@ -63,7 +65,10 @@ class PicViewer(QtGui.QWidget):
     self.repaint()
 
   def mousePressEvent(self, mouseEvent):
-    self.magnify = True
+    originalSize = self.originalImage.size()
+    size = self.size()
+    if (originalSize.width() > size.width()) or (originalSize.height() > size.height()):
+        self.magnify = True
     self.updateLens(mouseEvent)
 
   def mouseReleaseEvent(self, mouseEvent):
