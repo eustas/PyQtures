@@ -9,32 +9,33 @@ import sys
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-from ImageLoader import ImageLoader
-from PicViewer import PicViewer
+import loader
+import viewer
+
 
 class MainWindow(QtGui.QWidget):
 
   def __init__(self):
     super(MainWindow, self).__init__()
-    self.initUI()
+    self.init_ui()
 
-  def initUI(self):
-    self.picViewer = PicViewer()
+  def init_ui(self):
+    self.viewer = viewer.Viewer()
 
-    hbox = QtGui.QHBoxLayout()
-    hbox.addWidget(self.picViewer)
-    vbox = QtGui.QVBoxLayout()
-    vbox.addLayout(hbox)
-    vbox.setMargin(0)
-    self.setLayout(vbox)
+    h_box = QtGui.QHBoxLayout()
+    h_box.addWidget(self.viewer)
+    v_box = QtGui.QVBoxLayout()
+    v_box.addLayout(h_box)
+    v_box.setMargin(0)
+    self.setLayout(v_box)
 
     self.setGeometry(300, 300, 250, 150)
     self.setWindowTitle('pyQtures')
-    self.setWindowIcon(QtGui.QIcon('favico.png'))
+    self.setWindowIcon(QtGui.QIcon('icon.png'))
     self.show()
 
-  def keyPressEvent(self, keyEvent):
-    key = keyEvent.key()
+  def keyPressEvent(self, key_event):  # Signal handler.
+    key = key_event.key()
     if QtCore.Qt.Key_Escape == key:
       if self.isFullScreen():
         self.showNormal()
@@ -46,18 +47,21 @@ class MainWindow(QtGui.QWidget):
       else:
         self.showFullScreen()
 
-class PyQtures(QtGui.QApplication):
+
+class App(QtGui.QApplication):
 
   def __init__(self, argv):
-    super(PyQtures, self).__init__(argv)
-    self.initApp()
+    super(App, self).__init__(argv)
+    self.init()
 
-  def initApp(self):
-    self.imageLoader = ImageLoader()
-    self.mainWindow = MainWindow()
+  def init(self):
+    self.loader = loader.Loader()
+    self.main_window = MainWindow()
+
 
 def main():
-  sys.exit(PyQtures(sys.argv).exec_())
+  sys.exit(App(sys.argv).exec_())
+
 
 if __name__ == '__main__':
     main()
