@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 Created on Apr 13, 2012
 
@@ -19,17 +20,38 @@ class MainWindow(QtGui.QWidget):
     super(MainWindow, self).__init__()
     self.init_ui()
 
+  def on_current_file_changed(self, current):
+    self.viewer.set_path(self.file_model.filePath(current))
+
   def init_ui(self):
+    self.file_model = QtGui.QFileSystemModel()
+    self.file_selection_model = QtGui.QItemSelectionModel(self.file_model)
+    self.file_model.setRootPath(QtCore.QDir.rootPath())
+    self.file_tree = QtGui.QTreeView(parent=self);
+    self.file_tree.setModel(self.file_model)
+    self.file_tree.setSelectionModel(self.file_selection_model)
+    self.file_tree.setColumnHidden(1, True)
+    self.file_tree.setColumnHidden(2, True)
+    self.file_tree.setColumnHidden(3, True)
+
+    self.file_selection_model.currentChanged.connect(self.on_current_file_changed)
+
     self.viewer = viewer.Viewer()
 
+    self.splitter = QtGui.QSplitter();
+    self.splitter.addWidget(self.file_tree)
+    self.splitter.addWidget(self.viewer)
+    self.splitter.setStretchFactor(0, 0)
+    self.splitter.setStretchFactor(1, 1)
+
     h_box = QtGui.QHBoxLayout()
-    h_box.addWidget(self.viewer)
+    h_box.addWidget(self.splitter)
     v_box = QtGui.QVBoxLayout()
     v_box.addLayout(h_box)
     v_box.setMargin(0)
     self.setLayout(v_box)
 
-    self.setGeometry(300, 300, 250, 150)
+    self.resize(800, 600)
     self.setWindowTitle('pyQtures')
     self.setWindowIcon(QtGui.QIcon('icon.png'))
     self.show()

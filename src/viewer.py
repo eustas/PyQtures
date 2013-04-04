@@ -12,6 +12,8 @@ class Viewer(QtGui.QWidget):
 
   def __init__(self):
     super(Viewer, self).__init__()
+    self.path = None
+    self.ready = False
     self.init_ui()
 
   def init_ui(self):
@@ -24,6 +26,9 @@ class Viewer(QtGui.QWidget):
     canvas.end()
 
   def draw_widget(self, canvas):
+    if not self.ready:
+      return
+
     size = self.size()
     if self.magnify:
       original_size = self.original_image.size()
@@ -47,15 +52,28 @@ class Viewer(QtGui.QWidget):
       canvas.drawPixmap(x, y, self.image)
 
   def resizeEvent(self, unused_resize_event):  # Signal handler.
-    path = 'test.jpg'
-    self.original_image = QtGui.QApplication.instance().loader.load_image(path)
+    self.reload()
+
+  def set_path(self, path):
+    self.path = path
+    self.reload()
+
+  def reload(self):
+    self.original_image = QtGui.QApplication.instance().loader.load_image(self.path)
 
     size = self.size()
     original_size = self.original_image.size()
-    if (original_size.width() <= size.width()) and (original_size.height() <= size.height()):
-        self.image = self.original_image
+
+    if not original_size.width() or not original_size.height():
+      self.ready = False
     else:
-        self.image = self.original_image.scaled(size.width(), size.height(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+      self.ready = True
+      if (original_size.width() <= size.width()) and (original_size.height() <= size.height()):
+          self.image = self.original_image
+      else:
+          self.image = self.original_image.scaled(size.width(), size.height(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+
+    self.repaint()
 
   def update_lens(self, x, y):
     size = self.size()
@@ -68,15 +86,22 @@ class Viewer(QtGui.QWidget):
     self.repaint()
 
   def mousePressEvent(self, mouse_event):  # Signal handler.
+    if not self.ready:
+        return
+
     original_size = self.original_image.size()
     size = self.size()
     if (original_size.width() > size.width()) or (original_size.height() > size.height()):
-        self.magnify = True
-    self.update_lens(mouse_event.x(), mouse_event.y())
+      self.magnify = True
+      self.update_lens(mouse_event.x(), mouse_event.y())
 
   def mouseReleaseEvent(self, unused_mouse_event):  # Signal handler.
     self.magnify = False
     self.repaint()
 
   def mouseMoveEvent(self, mouse_event):  # Signal handler.
-    self.update_lens(mouse_event.x(), mouse_event.y())
+    if not self.ready:
+      return
+
+    if self.magnify:
+      self.update_lens(mouse_event.x(), mouse_event.y())
