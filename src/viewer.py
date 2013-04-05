@@ -4,11 +4,14 @@ Created on Apr 13, 2012
 @author: eustas
 '''
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt4.QtCore import Qt
+
+from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QPainter
+from PyQt4.QtGui import QWidget
 
 
-class Viewer(QtGui.QWidget):
+class Viewer(QWidget):
 
   def __init__(self):
     super(Viewer, self).__init__()
@@ -20,7 +23,7 @@ class Viewer(QtGui.QWidget):
     self.magnify = False
 
   def paintEvent(self, unused_paint_event):  # Signal handler.
-    canvas = QtGui.QPainter()
+    canvas = QPainter()
     canvas.begin(self)
     self.draw_widget(canvas)
     canvas.end()
@@ -59,7 +62,7 @@ class Viewer(QtGui.QWidget):
     self.reload()
 
   def reload(self):
-    self.original_image = QtGui.QApplication.instance().loader.load_image(self.path)
+    self.original_image = QApplication.instance().loader.load_image(self.path)
 
     size = self.size()
     original_size = self.original_image.size()
@@ -71,7 +74,7 @@ class Viewer(QtGui.QWidget):
       if (original_size.width() <= size.width()) and (original_size.height() <= size.height()):
           self.image = self.original_image
       else:
-          self.image = self.original_image.scaled(size.width(), size.height(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+          self.image = self.original_image.scaled(size.width(), size.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
     self.repaint()
 
