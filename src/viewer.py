@@ -6,21 +6,18 @@ Created on Apr 13, 2012
 
 from PyQt4.QtCore import Qt
 
-from PyQt4.QtGui import QApplication
 from PyQt4.QtGui import QPainter
 from PyQt4.QtGui import QWidget
 
 
 class Viewer(QWidget):
 
-  def __init__(self):
-    super(Viewer, self).__init__()
+  def __init__(self, loader):
+    self.loader = loader
     self.path = None
     self.ready = False
-    self.init_ui()
-
-  def init_ui(self):
     self.magnify = False
+    super(Viewer, self).__init__()
 
   def paintEvent(self, unused_paint_event):  # Signal handler.
     canvas = QPainter()
@@ -62,7 +59,7 @@ class Viewer(QWidget):
     self.reload()
 
   def reload(self):
-    self.original_image = QApplication.instance().loader.load_image(self.path)
+    self.original_image = self.loader.load_image(self.path)
 
     size = self.size()
     original_size = self.original_image.size()

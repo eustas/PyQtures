@@ -25,19 +25,18 @@ import loader
 import viewer
 
 
-class MainWindow(QWidget):
+class Window(QWidget):
 
   def __init__(self):
-    super(MainWindow, self).__init__()
-    self.init_ui()
+    super(Window, self).__init__()
+    self.loader = loader.Loader(24)
 
-  def on_current_file_changed(self, current):
-    self.viewer.set_path(self.file_model.filePath(current))
-
-  def init_ui(self):
     self.file_model = QFileSystemModel()
-    self.file_selection_model = QItemSelectionModel(self.file_model)
     self.file_model.setRootPath(QDir.rootPath())
+
+    self.file_selection_model = QItemSelectionModel(self.file_model)
+    self.file_selection_model.currentChanged.connect(self.on_current_file_changed)
+
     self.file_tree = QTreeView(parent=self);
     self.file_tree.setModel(self.file_model)
     self.file_tree.setSelectionModel(self.file_selection_model)
@@ -45,9 +44,7 @@ class MainWindow(QWidget):
     self.file_tree.setColumnHidden(2, True)
     self.file_tree.setColumnHidden(3, True)
 
-    self.file_selection_model.currentChanged.connect(self.on_current_file_changed)
-
-    self.viewer = viewer.Viewer()
+    self.viewer = viewer.Viewer(self.loader)
 
     self.splitter = QSplitter();
     self.splitter.addWidget(self.file_tree)
@@ -57,9 +54,11 @@ class MainWindow(QWidget):
 
     h_box = QHBoxLayout()
     h_box.addWidget(self.splitter)
+
     v_box = QVBoxLayout()
     v_box.addLayout(h_box)
     v_box.setMargin(0)
+
     self.setLayout(v_box)
 
     self.resize(800, 600)
@@ -80,20 +79,14 @@ class MainWindow(QWidget):
       else:
         self.showFullScreen()
 
-
-class App(QApplication):
-
-  def __init__(self, argv):
-    super(App, self).__init__(argv)
-    self.init()
-
-  def init(self):
-    self.loader = loader.Loader()
-    self.main_window = MainWindow()
+  def on_current_file_changed(self, current):
+    self.viewer.set_path(self.file_model.filePath(current))
 
 
 def main():
-  sys.exit(App(sys.argv).exec_())
+  app = QApplication(sys.argv)
+  app.window = Window()
+  sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
