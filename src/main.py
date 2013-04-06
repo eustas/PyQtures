@@ -23,63 +23,62 @@ from PyQt4.QtGui import QTreeView
 from PyQt4.QtGui import QVBoxLayout
 from PyQt4.QtGui import QWidget
 
-import loader
-import viewer
+from loader import Loader
+from viewer import Viewer
 
 
 class Window(QWidget):
 
   def __init__(self):
     super(Window, self).__init__()
-    self.loader = loader.Loader(24)
     palette = self.palette();
     palette.setColor(QPalette.Window, Qt.black);
     self.setAutoFillBackground(True);
     self.setPalette(palette);
 
-    self.current_path = None
+    self._current_path = None
 
-    self.file_model = QFileSystemModel()
-    self.file_model.setRootPath(QDir.rootPath())
+    self._file_model = QFileSystemModel()
+    self._file_model.setRootPath(QDir.rootPath())
 
-    self.file_selection_model = QItemSelectionModel(self.file_model)
-    self.file_selection_model.currentChanged.connect(self._on_current_file_changed)
+    self._file_selection_model = QItemSelectionModel(self._file_model)
+    self._file_selection_model.currentChanged.connect(self._on_current_file_changed)
 
-    self.file_tree = QTreeView(parent=self)
-    self.file_tree.collapsed.connect(self._on_tree_expanded_collapsed)
-    self.file_tree.expanded.connect(self._on_tree_expanded_collapsed)
-    self.file_tree.setModel(self.file_model)
-    self.file_tree.setSelectionModel(self.file_selection_model)
-    self.file_tree.setColumnHidden(1, True)
-    self.file_tree.setColumnHidden(2, True)
-    self.file_tree.setColumnHidden(3, True)
+    self._file_tree = QTreeView(parent=self)
+    self._file_tree.collapsed.connect(self._on_tree_expanded_collapsed)
+    self._file_tree.expanded.connect(self._on_tree_expanded_collapsed)
+    self._file_tree.setModel(self._file_model)
+    self._file_tree.setSelectionModel(self._file_selection_model)
+    self._file_tree.setColumnHidden(1, True)
+    self._file_tree.setColumnHidden(2, True)
+    self._file_tree.setColumnHidden(3, True)
 
-    self.viewer = viewer.Viewer(self.loader)
+    self._viewer = Viewer(Loader(24))
 
-    self.splitter = QSplitter();
-    self.splitter.addWidget(self.file_tree)
-    self.splitter.addWidget(self.viewer)
-    self.splitter.setStretchFactor(0, 0)
-    self.splitter.setStretchFactor(1, 1)
-    self.splitter.setCollapsible(0, False)
+    self._splitter = QSplitter();
+    self._splitter.addWidget(self._file_tree)
+    self._splitter.addWidget(self._viewer)
+    self._splitter.setStretchFactor(0, 0)
+    self._splitter.setStretchFactor(1, 1)
+    self._splitter.setCollapsible(0, False)
 
-    self.layout = QGridLayout()
-    self.layout.addWidget(self.splitter)
+    self._layout = QGridLayout()
+    self._layout.addWidget(self._splitter)
     self._switch_to_normal()
-    self.setLayout(self.layout)
+    self.setLayout(self._layout)
 
     self.resize(800, 600)
     self.setWindowTitle('pyQtures')
     self.show()
 
   def _switch_to_fullscreen(self):
-    self.splitter.widget(0).hide()
-    self.layout.setMargin(0)
+    self._splitter.widget(0).hide()
+    self._layout.setMargin(0)
     self.showFullScreen()
 
   def _switch_to_normal(self):
-    self.splitter.widget(0).show()
-    self.layout.setMargin(4)
+    self._splitter.widget(0).show()
+    self._layout.setMargin(4)
     self.showNormal()
 
   def keyPressEvent(self, key_event):  # Signal handler.
@@ -96,13 +95,13 @@ class Window(QWidget):
         self._switch_to_fullscreen()
 
   def _on_current_file_changed(self, new_current):
-    new_path = self.file_model.filePath(new_current)
-    if not self.current_path == new_path:
-        self.current_path = new_path
-        self.viewer.set_path(new_path)
+    new_path = self._file_model.filePath(new_current)
+    if not self._current_path == new_path:
+        self._current_path = new_path
+        self._viewer.set_path(new_path)
 
   def _on_tree_expanded_collapsed(self, unused_index):
-    QTimer.singleShot(1, lambda: self.file_tree.resizeColumnToContents(0))
+    QTimer.singleShot(1, lambda: self._file_tree.resizeColumnToContents(0))
 
 
 def _main():
