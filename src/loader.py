@@ -35,7 +35,7 @@ class Loader(object):
     if not path:
       return self.empty_image
 
-    if not path.endsWith('.jpg', cs=Qt.CaseInsensitive):
+    if not Loader.is_image(path):
       return self.empty_image
 
     if path in self.cache:
@@ -76,3 +76,7 @@ class Loader(object):
     self.count += 1
 
     return cast_off
+
+  @staticmethod
+  def is_image(path):
+    return path.endsWith('.jpg', cs=Qt.CaseInsensitive) or path.endsWith('.png', cs=Qt.CaseInsensitive)
