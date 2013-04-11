@@ -10,15 +10,14 @@ import sys
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtCore import QDir
 from PyQt4.QtCore import Qt
+from PyQt4.QtCore import QTimer
 
 from PyQt4.QtGui import QApplication
 from PyQt4.QtGui import QFileSystemModel
 from PyQt4.QtGui import QGridLayout
 from PyQt4.QtGui import QIcon
 from PyQt4.QtGui import QItemSelectionModel
-from PyQt4.QtGui import QPalette
 from PyQt4.QtGui import QSplitter
-from PyQt4.QtCore import QTimer
 from PyQt4.QtGui import QTreeView
 from PyQt4.QtGui import QVBoxLayout
 from PyQt4.QtGui import QWidget
@@ -31,10 +30,6 @@ class Window(QWidget):
 
   def __init__(self):
     super(Window, self).__init__()
-    palette = self.palette();
-    palette.setColor(QPalette.Window, Qt.black);
-    self.setAutoFillBackground(True);
-    self.setPalette(palette);
 
     self._current_path = None
 
@@ -52,6 +47,7 @@ class Window(QWidget):
     self._file_tree.setColumnHidden(1, True)
     self._file_tree.setColumnHidden(2, True)
     self._file_tree.setColumnHidden(3, True)
+    self._file_tree.header().hide()
 
     self._viewer = Viewer(Loader(24))
 
@@ -83,16 +79,22 @@ class Window(QWidget):
 
   def keyPressEvent(self, key_event):  # Signal handler.
     key = key_event.key()
+    if self.isFullScreen():
+      self._full_screen_key_handler(key)
+    else:
+      self._normal_key_handler(key)
+
+  def _full_screen_key_handler(self, key):
     if Qt.Key_Escape == key:
-      if self.isFullScreen():
-        self._switch_to_normal()
-      else:
-        QCoreApplication.instance().quit()
+      self._switch_to_normal()
     elif Qt.Key_Return == key:
-      if self.isFullScreen():
-        self._switch_to_normal()
-      else:
-        self._switch_to_fullscreen()
+      self._switch_to_normal()
+
+  def _normal_key_handler(self, key):
+    if Qt.Key_Escape == key:
+      QCoreApplication.instance().quit()
+    elif Qt.Key_Return == key:
+      self._switch_to_fullscreen()
 
   def _on_current_file_changed(self, new_current):
     new_path = self._file_model.filePath(new_current)
@@ -105,7 +107,41 @@ class Window(QWidget):
 
 
 def _main():
+  qss = '''
+* {
+  background-color: #000000;
+  color: #FFFFFF;
+  border: none;
+}
+QWidget:focus {
+  border: 1px solid #808080;
+}
+QScrollBar {
+  border: 1px solid #808080;
+  margin: 0;
+}
+QScrollBar:horizontal {
+  height: 12px;
+}
+QScrollBar::handle {
+  margin: 2px;
+  background: #808080;
+  border-radius: 3px;
+}
+QScrollBar:vertical {
+  width: 12px;
+}
+QScrollBar::add-line, QScrollBar::sub-line {
+  width: 0;
+  height: 0;
+}
+QScrollBar::add-page, QScrollBar::sub-page {
+  background: none;
+}
+'''
+
   app = QApplication(sys.argv)
+  app.setStyleSheet(qss)
   app.setWindowIcon(QIcon('icon.png'))
 
   app.window = Window()
