@@ -34,6 +34,8 @@ class Window(QWidget):
     self._current_path = None
 
     self._file_model = QFileSystemModel()
+    self._file_model.setNameFilters(['*.jpg', '*.png'])
+    self._file_model.setNameFilterDisables(False)
     self._file_model.setRootPath(QDir.rootPath())
 
     self._file_selection_model = QItemSelectionModel(self._file_model)
@@ -89,6 +91,18 @@ class Window(QWidget):
       self._switch_to_normal()
     elif Qt.Key_Return == key:
       self._switch_to_normal()
+    elif Qt.Key_Up == key:
+      self._go_to_sibling_image(-1)
+    elif Qt.Key_Down == key:
+      self._go_to_sibling_image(1)
+
+  def _go_to_sibling_image(self, offset):
+    current = self._file_selection_model.currentIndex()
+    nxt = current.sibling(current.row() + offset, current.column())
+    if (nxt.parent() != current.parent()):
+      return
+    #TODO(eustas) Iterate through dirs.
+    self._file_selection_model.setCurrentIndex(nxt, QItemSelectionModel.SelectCurrent)
 
   def _normal_key_handler(self, key):
     if Qt.Key_Escape == key:

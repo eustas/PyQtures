@@ -7,6 +7,9 @@ Created on 13.04.2012
 from PyQt4.QtCore import Qt
 
 from PyQt4.QtGui import QPixmap
+from PyQt4.QtGui import QTransform
+
+from exif import Exif
 
 # TODO(eustas): May be use QPixmapCache?
 
@@ -42,13 +45,17 @@ class Loader(object):
       node = self._cache[path]
       self._pull(node)
       return node.image
+
     image = QPixmap(path)
+    exif = Exif(path)
+    if exif.orientation != 0:
+      image = image.transformed(QTransform().rotate(360 - exif.orientation))
+
     node = _Node(path, image)
     self._cache[path] = node
     cast_off = self._push(node)
     if cast_off:
       del self._cache[cast_off.path]
-      print 'discarded  [%s]' % cast_off.path
     return image
 
   def _pull(self, node):

@@ -19,6 +19,7 @@ class Viewer(QWidget):
   def __init__(self, loader):
     self._loader = loader
     self._path = None
+    self._exif = None
     self._ready = False
     self._magnify = False
     self._label = QStaticText()
@@ -59,9 +60,10 @@ class Viewer(QWidget):
       x = (size.width() - scaled_image_size.width()) / 2
       y = (size.height() - scaled_image_size.height()) / 2
       canvas.drawPixmap(x, y, self._scaled_image)
-      canvas.setFont(self._font)
-      canvas.setPen(self._pen)
-      canvas.drawStaticText(2, 2, self._label)
+
+    canvas.setFont(self._font)
+    canvas.setPen(self._pen)
+    canvas.drawStaticText(2, 2, self._label)
 
   def resizeEvent(self, unused_resize_event):  # Signal handler.
     self._create_scaled_image()
