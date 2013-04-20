@@ -69,6 +69,10 @@ class Viewer(QWidget):
     self._create_scaled_image()
     self.repaint()
 
+  def reset_path(self):
+    self._path = None
+    self._reload()
+
   def set_path(self, path):
     self._path = path
     self._reload()

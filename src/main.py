@@ -9,7 +9,9 @@ import sys
 
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtCore import QDir
+from PyQt4.QtCore import QFileInfo
 from PyQt4.QtCore import Qt
+from PyQt4.QtCore import QEvent
 from PyQt4.QtCore import QTimer
 
 from PyQt4.QtGui import QApplication
@@ -17,6 +19,7 @@ from PyQt4.QtGui import QFileSystemModel
 from PyQt4.QtGui import QGridLayout
 from PyQt4.QtGui import QIcon
 from PyQt4.QtGui import QItemSelectionModel
+from PyQt4.QtGui import QMainWindow
 from PyQt4.QtGui import QSplitter
 from PyQt4.QtGui import QTreeView
 from PyQt4.QtGui import QVBoxLayout
@@ -26,12 +29,15 @@ from loader import Loader
 from viewer import Viewer
 
 
-class Window(QWidget):
+class Window(QMainWindow):
 
   def __init__(self):
     super(Window, self).__init__()
 
+    central_widget = QWidget()
+
     self._current_path = None
+    self._use_suffix = False
 
     self._file_model = QFileSystemModel()
     self._file_model.setNameFilters(['*.jpg', '*.png'])
@@ -63,11 +69,25 @@ class Window(QWidget):
     self._layout = QGridLayout()
     self._layout.addWidget(self._splitter)
     self._switch_to_normal()
-    self.setLayout(self._layout)
+    central_widget.setLayout(self._layout)
+
+    self._file_tree.installEventFilter(self);
 
     self.resize(800, 600)
     self.setWindowTitle('pyQtures')
+    self.setCentralWidget(central_widget)
     self.show()
+
+  def eventFilter(self, widget, event):
+    if event.type() == QEvent.KeyPress:
+      if event.key() == Qt.Key_Tab:
+        self._toggle_path_suffix()
+        return True
+    return QMainWindow.eventFilter(self, widget, event)
+
+  def _toggle_path_suffix(self):
+    self._use_suffix = not self._use_suffix
+    self._update_path()
 
   def _switch_to_fullscreen(self):
     self._splitter.widget(0).hide()
@@ -95,13 +115,15 @@ class Window(QWidget):
       self._go_to_sibling_image(-1)
     elif Qt.Key_Down == key:
       self._go_to_sibling_image(1)
+    elif Qt.Key_Tab == key:
+      self._toggle_path_suffix()
 
   def _go_to_sibling_image(self, offset):
     current = self._file_selection_model.currentIndex()
     nxt = current.sibling(current.row() + offset, current.column())
     if (nxt.parent() != current.parent()):
       return
-    #TODO(eustas) Iterate through dirs.
+    # TODO(eustas): Iterate through dirs?
     self._file_selection_model.setCurrentIndex(nxt, QItemSelectionModel.SelectCurrent)
 
   def _normal_key_handler(self, key):
@@ -114,14 +136,41 @@ class Window(QWidget):
     new_path = self._file_model.filePath(new_current)
     if not self._current_path == new_path:
         self._current_path = new_path
-        self._viewer.set_path(new_path)
+        self._update_path()
+
+  def _update_path(self):
+    if not self._use_suffix:
+      self._viewer.set_path(self._current_path)
+      return
+
+    self._viewer.reset_path()
+    if not self._current_path:
+      return
+
+    selected_file = QFileInfo(self._current_path)
+    if not selected_file.exists():
+      return
+
+    selected_dir = selected_file.absoluteDir()
+    file_name = selected_file.fileName()
+    if not selected_dir.exists():
+      return
+
+    if not selected_dir.cd('converted'):
+      return
+
+    suffixed_path = selected_dir.absoluteFilePath(file_name)
+    self._viewer.set_path(suffixed_path)
 
   def _on_tree_expanded_collapsed(self, unused_index):
     QTimer.singleShot(1, lambda: self._file_tree.resizeColumnToContents(0))
 
 
-def _main():
-  qss = '''
+class Application(QApplication):
+
+  def __init__(self):
+    super(Application, self).__init__(sys.argv)
+    self.setStyleSheet('''
 * {
   background-color: #000000;
   color: #FFFFFF;
@@ -152,14 +201,13 @@ QScrollBar::add-line, QScrollBar::sub-line {
 QScrollBar::add-page, QScrollBar::sub-page {
   background: none;
 }
-'''
+''')
+    self.setWindowIcon(QIcon('icon.png'))
+    self.window = Window()
 
-  app = QApplication(sys.argv)
-  app.setStyleSheet(qss)
-  app.setWindowIcon(QIcon('icon.png'))
 
-  app.window = Window()
-  sys.exit(app.exec_())
+def _main():
+  sys.exit(Application().exec_())
 
 
 if __name__ == '__main__':
